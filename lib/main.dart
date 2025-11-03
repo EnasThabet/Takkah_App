@@ -58,7 +58,7 @@ class TakkehApp extends StatelessWidget {
       home: const SplashView(),
       routes: {
         '/login': (_) => const LoginView(),
-'/signupscreen': (context) => const SignUpScreen(),
+'/signupscreen': (context) => const SignUpView(),
         '/check': (_) => const FirebaseCheckPage(),
       },
     );
@@ -113,7 +113,7 @@ class FirebaseCheckPage extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                  MaterialPageRoute(builder: (context) => const SignUpView())
                 );
               },
               child: const Text('Open Sign Up Page'),

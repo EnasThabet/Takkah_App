@@ -1,178 +1,249 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/otp_field.dart';
 
-class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+class SignUpView extends StatelessWidget {
+  const SignUpView({super.key});
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => AuthController(),
+      child: const _SignUpContent(),
+    );
+  }
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _controller = AuthController();
+class _SignUpContent extends StatefulWidget {
+  const _SignUpContent();
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  State<_SignUpContent> createState() => _SignUpContentState();
+}
+
+class _SignUpContentState extends State<_SignUpContent> {
+  bool showWelcome = false;
+
+  void _createAccount(AuthController controller) {
+    if (controller.validateAccount()) {
+      setState(() => showWelcome = true);
+      Timer(const Duration(seconds: 3), () {
+        Navigator.pushReplacementNamed(context, '/login');
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final controller = Provider.of<AuthController>(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFEFEFEF),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Header
-            Container(
-              height: 230,
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF178C45), Color(0xFF38C172)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-              child: SafeArea(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                Image.asset('assets/takkeh_logo.png', width: 52, height: 52),
-                    const SizedBox(height: 10),
-                    const Text("مرحباً بك",
-                        style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-                    const Text("أنشئ حسابك الآن",
-                        style: TextStyle(color: Colors.white70, fontSize: 16)),
-                  ],
-                ),
-              ),
-            ),
-
-            // Form
-            Transform.translate(
-              offset: const Offset(0, -40),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 25),
-                padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 30),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
+      backgroundColor: Colors.green.shade50,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  if (!showWelcome)
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.green),
+                      onPressed: () {
+                        if (controller.accountStep) {
+                          controller.accountStep = false;
+                        } else if (controller.otpStep) {
+                          controller.otpStep = false;
+                        } else {
+                          Navigator.pop(context);
+                        }
+                        controller.notifyListeners();
+                      },
                     ),
-                  ],
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const Center(
-                        child: Text("إنشاء حساب",
-                            style: TextStyle(
-                                color: Color(0xFF178C45),
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold)),
-                      ),
-                      const SizedBox(height: 25),
+                  const Spacer(),
+                  Image.asset('assets/takkeh_logo.png', width: 52, height: 52),
+                ],
+              ),
+              const SizedBox(height: 20),
 
-                      _buildField("اسم المستخدم", _controller.usernameCtrl, "الرجاء إدخال اسم المستخدم"),
-                      const SizedBox(height: 15),
-
-                      _buildField("رقم الهاتف المحمول", _controller.phoneCtrl, "رقم الهاتف مطلوب",
-                          keyboard: TextInputType.phone),
-                      const SizedBox(height: 15),
-
-                      _buildField(
-                        "كلمة المرور",
-                        _controller.passCtrl,
-                        "كلمة المرور مطلوبة",
-                        obscure: true,
-                        hint: "يجب أن تحتوي على 8 رموز على الأقل، رقم، حرف كبير، ورمز خاص (!@#\$%)",
-                        customValidator: _controller.validatePassword,
-                      ),
-                      const SizedBox(height: 15),
-
-                      _buildField(
-                        "تأكيد كلمة المرور",
-                        _controller.confirmCtrl,
-                        "أعد كتابة كلمة المرور",
-                        obscure: true,
-                        customValidator: (val) {
-                          if (val == null || val.isEmpty) return "أعد كتابة كلمة المرور";
-                          if (val != _controller.passCtrl.text) return "كلمتا المرور غير متطابقتين";
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 25),
-
-                      _buildButton("إرسال الكود", () {
-                        _controller.sendOTP(context, _formKey, () => setState(() {}));
-                      }, const Color(0xFF178C45)),
-
-                      const SizedBox(height: 25),
-                      if (_controller.otpEnabled)
-                        OTPField(enabled: _controller.otpEnabled, controllers: _controller.otpControllers),
-
-                      const SizedBox(height: 30),
-                      _buildButton("إنشاء حساب", () => _controller.verifyOTP(context), const Color(0xFF38C172)),
-                    ],
-                  ),
+              Expanded(
+                child: Center(
+                  child: showWelcome
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.emoji_events,
+                                color: Colors.green, size: 80),
+                            SizedBox(height: 20),
+                            Text("🎉 مرحباً بك في عائلة تكّة !",
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                )),
+                          ],
+                        )
+                      : SingleChildScrollView(
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            child: _buildCurrentStep(context, controller),
+                          ),
+                        ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildField(String label, TextEditingController controller, String validatorMsg,
-      {bool obscure = false,
-      String? hint,
-      TextInputType keyboard = TextInputType.text,
-      String? Function(String?)? customValidator}) {
-    return TextFormField(
+  Widget _buildCurrentStep(BuildContext context, AuthController controller) {
+    if (!controller.otpStep && !controller.accountStep) {
+      return Column(
+        key: const ValueKey('phone'),
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          _buildPhoneField(controller),
+          if (controller.phoneError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 5, right: 12),
+              child: Text(
+                controller.phoneError!,
+                style: const TextStyle(color: Colors.red, fontSize: 14),
+              ),
+            ),
+          const SizedBox(height: 20),
+          _buildButton("إرسال كود التحقق", () => controller.sendOTP(context)),
+        ],
+      );
+    }
+
+    if (controller.otpStep && !controller.accountStep) {
+      return Column(
+        key: const ValueKey('otp'),
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Text("أدخل الكود المرسل",
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green)),
+          const SizedBox(height: 20),
+          OTPField(enabled: true, controllers: controller.otpControllers),
+          if (controller.otpError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                controller.otpError!,
+                style: const TextStyle(color: Colors.red, fontSize: 14),
+              ),
+            ),
+          const SizedBox(height: 20),
+          _buildButton("تأكيد الكود", () => controller.verifyOTP(context)),
+        ],
+      );
+    }
+
+    return Column(
+      key: const ValueKey('account'),
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        _buildField("اسم المستخدم", controller.usernameCtrl,
+            error: controller.usernameError),
+        const SizedBox(height: 15),
+        _buildField("كلمة المرور", controller.passCtrl,
+            obscure: true, error: controller.passError),
+        const SizedBox(height: 15),
+        _buildField("تأكيد كلمة المرور", controller.confirmCtrl,
+            obscure: true, error: controller.confirmError),
+        const SizedBox(height: 25),
+        _buildButton("إنشاء الحساب", () => _createAccount(controller)),
+      ],
+    );
+  }
+
+  Widget _buildPhoneField(AuthController controller) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.green.shade100,
+            borderRadius: BorderRadius.circular(25),
+          ),
+          child: const Text(
+            "+972",
+            style: TextStyle(
+                fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: TextField(
+            controller: controller.phoneCtrl,
+            keyboardType: TextInputType.number,
+            maxLength: 10,
+            decoration: InputDecoration(
+              counterText: "",
+              labelText: "رقم الجوال",
+              errorText: controller.phoneError,
+              labelStyle: const TextStyle(color: Colors.green),
+              filled: true,
+              fillColor: Colors.green.shade50,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildField(String label, TextEditingController controller,
+      {bool obscure = false, String? error}) {
+    return TextField(
       controller: controller,
       obscureText: obscure,
       textAlign: TextAlign.right,
-      keyboardType: keyboard,
       decoration: InputDecoration(
-        hintText: hint ?? label,
         labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFF178C45)),
+        errorText: error,
+        labelStyle: const TextStyle(color: Colors.green),
         filled: true,
-        fillColor: const Color(0xFFE5F3EA),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        fillColor: Colors.green.shade50,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(25),
           borderSide: BorderSide.none,
         ),
       ),
-      validator: customValidator ?? (value) => value == null || value.isEmpty ? validatorMsg : null,
     );
   }
 
-  Widget _buildButton(String text, VoidCallback onPressed, Color color) {
+  Widget _buildButton(String text, VoidCallback onPressed) {
     return SizedBox(
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+          backgroundColor: Colors.green,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         ),
-        child: Text(text,
-            style: const TextStyle(
-                color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        child: Text(
+          text,
+          style: const TextStyle(
+              fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
       ),
     );
   }
