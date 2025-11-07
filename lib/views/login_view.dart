@@ -29,8 +29,13 @@ class _LoginViewState extends State<LoginView> {
       _isLoading = false;
     });
 
-    if (_controller.login(_controller.usernameCtrl.text, _controller.passCtrl.text)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("✅ تم تسجيل الدخول بنجاح")));
+    if (_controller.login(
+      _controller.usernameCtrl.text,
+      _controller.passCtrl.text,
+    )) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("✅ تم تسجيل الدخول بنجاح")));
     } else {
       setState(() {
         _error = 'بيانات الدخول غير صحيحة أو مفقودة';
@@ -45,7 +50,9 @@ class _LoginViewState extends State<LoginView> {
         textDirection: TextDirection.rtl,
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [Colors.green.shade700, Colors.green.shade400]),
+            gradient: LinearGradient(
+              colors: [Colors.green.shade700, Colors.green.shade400],
+            ),
           ),
           child: SafeArea(
             child: Center(
@@ -56,14 +63,27 @@ class _LoginViewState extends State<LoginView> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset('assets/takkeh_logo.png', width: 52, height: 52),
+                        Image.asset(
+                          'assets/takkeh_logo.png',
+                          width: 52,
+                          height: 52,
+                        ),
                         const SizedBox(width: 12),
-                        const Text('Takkeh', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800)),
+                        const Text(
+                          'Takkeh',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 20),
                     Card(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       elevation: 6,
                       child: Padding(
                         padding: const EdgeInsets.all(20),
@@ -73,8 +93,15 @@ class _LoginViewState extends State<LoginView> {
                             children: [
                               TextFormField(
                                 controller: _controller.usernameCtrl,
-                                decoration: const InputDecoration(labelText: 'اسم المستخدم أو رقم الهاتف', prefixIcon: Icon(Icons.person)),
-                                validator: (v) => v!.isEmpty ? 'الرجاء إدخال اسم المستخدم' : null,
+                                decoration: const InputDecoration(
+                                  labelText: 'اسم المستخدم أو رقم الهاتف',
+                                  prefixIcon: Icon(Icons.person),
+                                ),
+                                validator:
+                                    (v) =>
+                                        v!.isEmpty
+                                            ? 'الرجاء إدخال اسم المستخدم'
+                                            : null,
                               ),
                               const SizedBox(height: 14),
                               TextFormField(
@@ -84,30 +111,52 @@ class _LoginViewState extends State<LoginView> {
                                   labelText: 'كلمة المرور',
                                   prefixIcon: const Icon(Icons.lock),
                                   suffixIcon: IconButton(
-                                    icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
-                                    onPressed: () => setState(() => _obscure = !_obscure),
+                                    icon: Icon(
+                                      _obscure
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                    ),
+                                    onPressed:
+                                        () => setState(
+                                          () => _obscure = !_obscure,
+                                        ),
                                   ),
                                 ),
-                                validator: (v) => v!.isEmpty ? 'الرجاء إدخال كلمة المرور' : null,
+                                validator:
+                                    (v) =>
+                                        v!.isEmpty
+                                            ? 'الرجاء إدخال كلمة المرور'
+                                            : null,
                               ),
                               const SizedBox(height: 8),
                               if (_error != null)
-                                Text(_error!, style: const TextStyle(color: Colors.red)),
+                                Text(
+                                  _error!,
+                                  style: const TextStyle(color: Colors.red),
+                                ),
                               const SizedBox(height: 8),
                               SizedBox(
                                 width: double.infinity,
                                 height: 50,
-                                child: _isLoading
-                                    ? const CircularProgressIndicator()
-                                    : ElevatedButton(
-                                        onPressed: _login,
-                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade700),
-                                        child: const Text("تسجيل الدخول"),
-                                      ),
+                                child:
+                                    _isLoading
+                                        ? const CircularProgressIndicator()
+                                        : ElevatedButton(
+                                          onPressed: _login,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                Colors.green.shade700,
+                                          ),
+                                          child: const Text("تسجيل الدخول"),
+                                        ),
                               ),
                               const SizedBox(height: 12),
                               TextButton(
-                                onPressed: () => Navigator.pushNamed(context, '/signupscreen'),
+                                onPressed:
+                                    () => Navigator.pushNamed(
+                                      context,
+                                      '/signupscreen',
+                                    ),
                                 child: const Text("إنشاء حساب جديد"),
                               ),
                             ],
