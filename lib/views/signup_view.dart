@@ -71,9 +71,10 @@ class _SignUpContentState extends State<_SignUpContent> {
                         const Text(
                           "إنشاء حساب تكّة",
                           style: TextStyle(
-                              color: Colors.green,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold),
+                            color: Colors.green,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -96,13 +97,16 @@ class _SignUpContentState extends State<_SignUpContent> {
                         text: TextSpan(
                           text: "لديك حساب بالفعل؟ ",
                           style: const TextStyle(
-                              color: Colors.black87, fontSize: 15),
+                            color: Colors.black87,
+                            fontSize: 15,
+                          ),
                           children: [
                             TextSpan(
                               text: "تسجيل الدخول",
                               style: TextStyle(
-                                  color: Colors.green.shade700,
-                                  fontWeight: FontWeight.bold),
+                                color: Colors.green.shade700,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -133,7 +137,9 @@ class _SignUpContentState extends State<_SignUpContent> {
             if (!RegExp(r'^(0?5\d{8})$').hasMatch(phoneInput)) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('الرجاء إدخال رقم جوال صالح (مثال: 0591234567 أو 591234567)'),
+                  content: Text(
+                    'الرجاء إدخال رقم جوال صالح (مثال: 0591234567 أو 591234567)',
+                  ),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -141,9 +147,10 @@ class _SignUpContentState extends State<_SignUpContent> {
             }
 
             // تطبيع الرقم: إذا بدأ بـ0 شيلها
-            String normalizedLocal = phoneInput.startsWith('0')
-                ? phoneInput.substring(1)
-                : phoneInput;
+            String normalizedLocal =
+                phoneInput.startsWith('0')
+                    ? phoneInput.substring(1)
+                    : phoneInput;
 
             // fullNumber جاهز كـ +970598...
             final fullNumber = "$selectedCountryCode$normalizedLocal";
@@ -164,7 +171,10 @@ class _SignUpContentState extends State<_SignUpContent> {
           const Text(
             "أدخل الكود المرسل إلى رقمك",
             style: TextStyle(
-                fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.green,
+            ),
           ),
           const SizedBox(height: 20),
           Directionality(
@@ -191,11 +201,16 @@ class _SignUpContentState extends State<_SignUpContent> {
           const SizedBox(height: 15),
           _buildField("كلمة المرور", controller.passCtrl, obscure: true),
           const SizedBox(height: 15),
-          _buildField("تأكيد كلمة المرور", controller.confirmCtrl, obscure: true),
+          _buildField(
+            "تأكيد كلمة المرور",
+            controller.confirmCtrl,
+            obscure: true,
+          ),
           const SizedBox(height: 25),
           _buildButton("إنشاء الحساب", () async {
             // phoneCtrl الآن يحتوي على local normalized (مثال 59xxxxxxx) — إذا تريدين إرسال مع المقدمة:
-            final phoneToSend = "$selectedCountryCode${controller.phoneCtrl.text.trim()}";
+            final phoneToSend =
+                "$selectedCountryCode${controller.phoneCtrl.text.trim()}";
             controller.phoneCtrl.text = phoneToSend; // استبدل الحقل قبل الإرسال
             await controller.registerUser(context);
           }),
@@ -207,110 +222,131 @@ class _SignUpContentState extends State<_SignUpContent> {
   }
 
   Widget _buildPhoneField(AuthController controller) => Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          const Padding(
-            padding: EdgeInsets.only(right: 12, bottom: 8),
-            child: Text("رقم الجوال",
-                style: TextStyle(
-                    color: Colors.green,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500)),
+    crossAxisAlignment: CrossAxisAlignment.end,
+    children: [
+      const Padding(
+        padding: EdgeInsets.only(right: 12, bottom: 8),
+        child: Text(
+          "رقم الجوال",
+          style: TextStyle(
+            color: Colors.green,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
           ),
-          Row(
-            children: [
-              Container(
-                height: 60,
-                decoration: BoxDecoration(
-                  color: Colors.green.shade100,
-                  borderRadius: const BorderRadius.only(
+        ),
+      ),
+      Row(
+        children: [
+          Expanded(
+            // أولاً حقل الرقم
+            child: TextFormField(
+              controller: controller.phoneCtrl,
+              keyboardType: TextInputType.phone,
+              textDirection: TextDirection.ltr,
+              textAlign: TextAlign.left,
+              decoration: InputDecoration(
+                hintText: "5XXXXXXXX",
+                filled: true,
+                fillColor: Colors.white.withOpacity(0.6),
+                border: const OutlineInputBorder(
+                  borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(25),
                     bottomLeft: Radius.circular(25),
                   ),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: selectedCountryCode,
-                    icon: const Icon(Icons.arrow_drop_down, color: Colors.green),
-                    items: const [
-                      DropdownMenuItem(
-                        value: '+970',
-                        child: Text('🇵🇸 +970', style: TextStyle(color: Colors.green)),
-                      ),
-                      DropdownMenuItem(
-                        value: '+972',
-                        child: Text('🇮🇱 +972', style: TextStyle(color: Colors.green)),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        selectedCountryCode = value!;
-                      });
-                    },
-                  ),
+                  borderSide: BorderSide.none,
                 ),
               ),
-              Expanded(
-                child: TextFormField(
-                  controller: controller.phoneCtrl,
-                  keyboardType: TextInputType.phone,
-                  textDirection: TextDirection.ltr,
-                  decoration: InputDecoration(
-                    hintText: "0591234567 أو 591234567",
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.6),
-                    border: const OutlineInputBorder(
-                      borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(25),
-                        bottomRight: Radius.circular(25),
-                      ),
-                      borderSide: BorderSide.none,
+            ),
+          ),
+          Container(
+            // بعدين المقدمة
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.green.shade100,
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(25),
+                bottomRight: Radius.circular(25),
+              ),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selectedCountryCode,
+                icon: const Icon(Icons.arrow_drop_down, color: Colors.green),
+                items: const [
+                  DropdownMenuItem(
+                    value: '+970',
+                    child: Text(
+                      '🇵🇸 +970',
+                      style: TextStyle(color: Colors.green),
                     ),
                   ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      );
-
-  Widget _buildField(String label, TextEditingController ctrl,
-          {bool obscure = false}) =>
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12, bottom: 8),
-            child: Text(label,
-                style: const TextStyle(color: Colors.green, fontSize: 14)),
-          ),
-          TextField(
-            controller: ctrl,
-            obscureText: obscure,
-            textAlign: TextAlign.right,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: Colors.white.withOpacity(0.6),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25),
-                borderSide: BorderSide.none,
+                  DropdownMenuItem(
+                    value: '+972',
+                    child: Text(
+                      '🇮🇱 +972',
+                      style: TextStyle(color: Colors.green),
+                    ),
+                  ),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    selectedCountryCode = value!;
+                  });
+                },
               ),
             ),
           ),
         ],
-      );
+      ),
+    ],
+  );
+
+  Widget _buildField(
+    String label,
+    TextEditingController ctrl, {
+    bool obscure = false,
+  }) => Column(
+    crossAxisAlignment: CrossAxisAlignment.end,
+    children: [
+      Padding(
+        padding: const EdgeInsets.only(right: 12, bottom: 8),
+        child: Text(
+          label,
+          style: const TextStyle(color: Colors.green, fontSize: 14),
+        ),
+      ),
+      TextField(
+        controller: ctrl,
+        obscureText: obscure,
+        textAlign: TextAlign.right,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.white.withOpacity(0.6),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    ],
+  );
 
   Widget _buildButton(String text, VoidCallback onPressed) => SizedBox(
-        width: double.infinity,
-        height: 50,
-        child: ElevatedButton(
-          onPressed: onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green.shade600,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-          ),
-          child: Text(text,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+    width: double.infinity,
+    height: 50,
+    child: ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.green.shade600,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
         ),
-      );
+      ),
+    ),
+  );
 }
