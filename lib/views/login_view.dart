@@ -15,33 +15,28 @@ class _LoginViewState extends State<LoginView> {
   bool _obscure = true;
   String? _error;
 
-  Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
+ Future<void> _login() async {
+  if (!_formKey.currentState!.validate()) return;
 
+  setState(() {
+    _isLoading = true;
+    _error = null;
+  });
+
+  try {
+    // استدعاء دالة loginUser من AuthController
+    await _controller.loginUser(context);
+  } catch (e) {
     setState(() {
-      _isLoading = true;
-      _error = null;
+      _error = "حدث خطأ غير متوقع: $e";
     });
-
-    await Future.delayed(const Duration(seconds: 2));
-
+  } finally {
     setState(() {
       _isLoading = false;
     });
-
-    if (_controller.login(
-      _controller.usernameCtrl.text,
-      _controller.passCtrl.text,
-    )) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("✅ تم تسجيل الدخول بنجاح")));
-    } else {
-      setState(() {
-        _error = 'بيانات الدخول غير صحيحة أو مفقودة';
-      });
-    }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

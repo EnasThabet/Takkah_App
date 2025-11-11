@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -25,17 +24,7 @@ class _SignUpContent extends StatefulWidget {
 }
 
 class _SignUpContentState extends State<_SignUpContent> {
-  bool showWelcome = false;
-
-  void _createAccount(AuthController controller) {
-    if (controller.validateAccount()) {
-      setState(() => showWelcome = true);
-      Timer(const Duration(seconds: 3), () {
-        Navigator.pushReplacementNamed(context, '/login');
-      });
-    }
-  }
-
+  String selectedCountryCode = '+970'; // default
   @override
   Widget build(BuildContext context) {
     final controller = Provider.of<AuthController>(context);
@@ -45,146 +34,77 @@ class _SignUpContentState extends State<_SignUpContent> {
       child: Scaffold(
         body: Stack(
           children: [
-            // 🎨 خلفية بتدرّج لوني ناعم (أخضر إلى أبيض)
             Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    Color(0xFFA8E6CF), // أخضر فاتح
-                    Color(0xFFF0FFF4), // أبيض مائل للأخضر
-                  ],
+                  colors: [Color(0xFFA8E6CF), Color(0xFFF0FFF4)],
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
                 ),
               ),
             ),
-
-            // 🌫️ طبقة Blur شفافة
             BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: Container(color: Colors.white.withOpacity(0.1)),
             ),
-
-            // 🧱 المحتوى الرئيسي
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
                     const SizedBox(height: 40),
-
-                    // ✅ اللوجو الدائري + النص
                     Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Center(
-                          child: Container(
-                            width: 130,
-                            height: 130,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.green.shade400,
-                                width: 3,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.green.withOpacity(0.2),
-                                  blurRadius: 10,
-                                  spreadRadius: 3,
-                                ),
-                              ],
-                              image: const DecorationImage(
-                                image: AssetImage('assets/takkeh_logo.png'),
-                                fit: BoxFit.cover,
-                              ),
+                        Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.green, width: 3),
+                            image: const DecorationImage(
+                              image: AssetImage('assets/takkeh_logo.png'),
+                              fit: BoxFit.cover,
                             ),
                           ),
                         ),
                         const SizedBox(height: 12),
                         const Text(
                           "إنشاء حساب تكّة",
-                          textAlign: TextAlign.center,
-                          textDirection: TextDirection.rtl,
                           style: TextStyle(
-                            color: Colors.green,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black26,
-                                blurRadius: 3,
-                                offset: Offset(1, 1),
-                              ),
-                            ],
-                          ),
+                              color: Colors.green,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 30),
-
                     Expanded(
                       child: Center(
-                        child:
-                            showWelcome
-                                ? Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Icon(
-                                      Icons.emoji_events,
-                                      color: Colors.green,
-                                      size: 80,
-                                    ),
-                                    SizedBox(height: 20),
-                                    Text(
-                                      "🎉 مرحباً بك في عائلة تكّة !",
-                                      textAlign: TextAlign.center,
-                                      textDirection: TextDirection.rtl,
-                                      style: TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.green,
-                                      ),
-                                    ),
-                                  ],
-                                )
-                                : SingleChildScrollView(
-                                  child: AnimatedSwitcher(
-                                    duration: const Duration(milliseconds: 300),
-                                    child: _buildCurrentStep(
-                                      context,
-                                      controller,
-                                    ),
-                                  ),
-                                ),
+                        child: SingleChildScrollView(
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            child: _buildCurrentStep(context, controller),
+                          ),
+                        ),
                       ),
                     ),
-
-                    // 🟢 زر "لديك حساب بالفعل؟ تسجيل الدخول"
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10, top: 10),
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.pushReplacementNamed(context, '/login');
-                        },
-                        child: RichText(
-                          text: TextSpan(
-                            text: "لديك حساب بالفعل؟ ",
-                            style: const TextStyle(
-                              color: Colors.black87,
-                              fontSize: 15,
-                            ),
-                            children: [
-                              TextSpan(
-                                text: "تسجيل الدخول",
-                                style: TextStyle(
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacementNamed(context, '/login');
+                      },
+                      child: RichText(
+                        text: TextSpan(
+                          text: "لديك حساب بالفعل؟ ",
+                          style: const TextStyle(
+                              color: Colors.black87, fontSize: 15),
+                          children: [
+                            TextSpan(
+                              text: "تسجيل الدخول",
+                              style: TextStyle(
                                   color: Colors.green.shade700,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -206,7 +126,33 @@ class _SignUpContentState extends State<_SignUpContent> {
         children: [
           _buildPhoneField(controller),
           const SizedBox(height: 20),
-          _buildButton("إرسال كود التحقق", () => controller.sendOTP(context)),
+          _buildButton("إرسال كود التحقق", () {
+            String phoneInput = controller.phoneCtrl.text.trim();
+
+            // قبول 10 أرقام تبدأ بـ0 (مثال 059...) أو 9 أرقام تبدأ بـ5 (598...)
+            if (!RegExp(r'^(0?5\d{8})$').hasMatch(phoneInput)) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('الرجاء إدخال رقم جوال صالح (مثال: 0591234567 أو 591234567)'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
+
+            // تطبيع الرقم: إذا بدأ بـ0 شيلها
+            String normalizedLocal = phoneInput.startsWith('0')
+                ? phoneInput.substring(1)
+                : phoneInput;
+
+            // fullNumber جاهز كـ +970598...
+            final fullNumber = "$selectedCountryCode$normalizedLocal";
+
+            // نخزّن الشكل النهائي في phoneCtrl لو بدنا نرسله للسيرفر لاحقاً
+            controller.phoneCtrl.text = normalizedLocal;
+
+            controller.sendOTP(context, fullNumber);
+          }),
         ],
       );
     }
@@ -214,17 +160,11 @@ class _SignUpContentState extends State<_SignUpContent> {
     if (controller.otpStep && !controller.accountStep) {
       return Column(
         key: const ValueKey('otp'),
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Text(
-            "أدخل الكود المرسل",
-            textAlign: TextAlign.center,
-            textDirection: TextDirection.rtl,
+            "أدخل الكود المرسل إلى رقمك",
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.green,
-            ),
+                fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
           ),
           const SizedBox(height: 20),
           Directionality(
@@ -234,241 +174,143 @@ class _SignUpContentState extends State<_SignUpContent> {
               controllers: controller.otpControllers,
             ),
           ),
-          if (controller.otpError != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                controller.otpError!,
-                textAlign: TextAlign.center,
-                textDirection: TextDirection.rtl,
-                style: const TextStyle(color: Colors.red, fontSize: 14),
-              ),
-            ),
           const SizedBox(height: 20),
-          _buildButton("تأكيد الكود", () => controller.verifyOTP(context)),
+          _buildButton("تأكيد الكود", () async {
+            await controller.verifyOTP(context);
+          }),
         ],
       );
     }
 
-    return Column(
-      key: const ValueKey('account'),
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        _buildField(
-          "اسم المستخدم",
-          controller.usernameCtrl,
-          error: controller.usernameError,
-        ),
-        const SizedBox(height: 15),
-        _buildField(
-          "كلمة المرور",
-          controller.passCtrl,
-          obscure: true,
-          error: controller.passError,
-        ),
-        const SizedBox(height: 15),
-        _buildField(
-          "تأكيد كلمة المرور",
-          controller.confirmCtrl,
-          obscure: true,
-          error: controller.confirmError,
-        ),
-        const SizedBox(height: 25),
-        _buildButton("إنشاء الحساب", () => _createAccount(controller)),
-      ],
-    );
+    if (controller.accountStep) {
+      return Column(
+        key: const ValueKey('account'),
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          _buildField("اسم المستخدم", controller.usernameCtrl),
+          const SizedBox(height: 15),
+          _buildField("كلمة المرور", controller.passCtrl, obscure: true),
+          const SizedBox(height: 15),
+          _buildField("تأكيد كلمة المرور", controller.confirmCtrl, obscure: true),
+          const SizedBox(height: 25),
+          _buildButton("إنشاء الحساب", () async {
+            // phoneCtrl الآن يحتوي على local normalized (مثال 59xxxxxxx) — إذا تريدين إرسال مع المقدمة:
+            final phoneToSend = "$selectedCountryCode${controller.phoneCtrl.text.trim()}";
+            controller.phoneCtrl.text = phoneToSend; // استبدل الحقل قبل الإرسال
+            await controller.registerUser(context);
+          }),
+        ],
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 
-  /// رقم الجوال: RTL للنصوص، LTR للأرقام، المقدمة على اليسار
-  Widget _buildPhoneField(AuthController controller) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 12, bottom: 8),
-          child: Text(
-            "رقم الجوال",
-            textAlign: TextAlign.right,
-            style: const TextStyle(
-              color: Colors.green,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+  Widget _buildPhoneField(AuthController controller) => Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(right: 12, bottom: 8),
+            child: Text("رقم الجوال",
+                style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500)),
           ),
-        ),
-
-        // 🔁 المقدمة الآن على اليسار
-        Row(
-          textDirection: TextDirection.rtl,
-          children: [
-            // 🟩 حقل الرقم
-            Expanded(
-              child: Directionality(
-                textDirection: TextDirection.ltr,
-                child: TextField(
+          Row(
+            children: [
+              Container(
+                height: 60,
+                decoration: BoxDecoration(
+                  color: Colors.green.shade100,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(25),
+                    bottomLeft: Radius.circular(25),
+                  ),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedCountryCode,
+                    icon: const Icon(Icons.arrow_drop_down, color: Colors.green),
+                    items: const [
+                      DropdownMenuItem(
+                        value: '+970',
+                        child: Text('🇵🇸 +970', style: TextStyle(color: Colors.green)),
+                      ),
+                      DropdownMenuItem(
+                        value: '+972',
+                        child: Text('🇮🇱 +972', style: TextStyle(color: Colors.green)),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        selectedCountryCode = value!;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              Expanded(
+                child: TextFormField(
                   controller: controller.phoneCtrl,
-                  keyboardType: TextInputType.number,
-                  maxLength: 9,
-                  textAlign: TextAlign.left,
+                  keyboardType: TextInputType.phone,
+                  textDirection: TextDirection.ltr,
                   decoration: InputDecoration(
-                    counterText: "",
-                    hintText: "5XXXXXXXX",
-                    hintStyle: TextStyle(
-                      color: Colors.grey.shade400,
-                      fontSize: 16,
-                    ),
+                    hintText: "0591234567 أو 591234567",
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.6),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 14,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(25),
+                    border: const OutlineInputBorder(
+                      borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(25),
+                        bottomRight: Radius.circular(25),
+                      ),
                       borderSide: BorderSide.none,
                     ),
                   ),
                 ),
               ),
-            ),
+            ],
+          ),
+        ],
+      );
 
-            const SizedBox(width: 8),
-
-            // 🟩 زر المقدمة (+972 / +970)
-            GestureDetector(
-              onTap: controller.toggleCountryCode,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 14,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade100.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(25),
-                  border: Border.all(color: Colors.green.shade300, width: 1),
-                ),
-                child: Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        controller.countryCode,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.swap_horiz,
-                        size: 16,
-                        color: Colors.green.shade700,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-
-        // 🟥 رسالة الخطأ
-        if (controller.phoneError != null)
+  Widget _buildField(String label, TextEditingController ctrl,
+          {bool obscure = false}) =>
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
           Padding(
-            padding: const EdgeInsets.only(top: 8, right: 12),
-            child: Text(
-              controller.phoneError!,
-              textAlign: TextAlign.right,
-              textDirection: TextDirection.rtl,
-              style: const TextStyle(color: Colors.red, fontSize: 14),
-            ),
+            padding: const EdgeInsets.only(right: 12, bottom: 8),
+            child: Text(label,
+                style: const TextStyle(color: Colors.green, fontSize: 14)),
           ),
-      ],
-    );
-  }
-
-  Widget _buildField(
-    String label,
-    TextEditingController controller, {
-    bool obscure = false,
-    String? error,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(right: 12, bottom: 8),
-          child: Text(
-            label,
-            textAlign: TextAlign.right,
-            style: const TextStyle(
-              color: Colors.green,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        Directionality(
-          textDirection: TextDirection.rtl,
-          child: TextField(
-            controller: controller,
+          TextField(
+            controller: ctrl,
             obscureText: obscure,
             textAlign: TextAlign.right,
             decoration: InputDecoration(
               filled: true,
               fillColor: Colors.white.withOpacity(0.6),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 14,
-              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(25),
                 borderSide: BorderSide.none,
               ),
             ),
           ),
-        ),
-        if (error != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8, right: 12),
-            child: Text(
-              error,
-              textAlign: TextAlign.right,
-              textDirection: TextDirection.rtl,
-              style: const TextStyle(color: Colors.red, fontSize: 14),
-            ),
-          ),
-      ],
-    );
-  }
+        ],
+      );
 
-  Widget _buildButton(String text, VoidCallback onPressed) {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green.shade600,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(25),
+  Widget _buildButton(String text, VoidCallback onPressed) => SizedBox(
+        width: double.infinity,
+        height: 50,
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green.shade600,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
           ),
-          elevation: 3,
-          shadowColor: Colors.green.shade200,
+          child: Text(text,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         ),
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          textDirection: TextDirection.rtl,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-      ),
-    );
-  }
+      );
 }

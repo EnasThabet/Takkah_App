@@ -1,43 +1,23 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class AuthController extends ChangeNotifier {
-  // 🔗 Firebase
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  // 📱 Controllers
   final usernameCtrl = TextEditingController();
   final phoneCtrl = TextEditingController();
   final passCtrl = TextEditingController();
   final confirmCtrl = TextEditingController();
   final otpControllers = List.generate(6, (_) => TextEditingController());
 
-  // 🧩 متغيرات الحالة
-  String? verificationId;
   bool otpStep = false;
   bool accountStep = false;
+  int? generatedCode;
 
-  // 🌍 كود الدولة (افتراضي: +972)
-  String countryCode = "+972";
+  final String serverUrl = "http://192.168.0.112:3000";
+  
+  //final String serverUrl = "http://localhost:3000";
 
-  // ⚠️ رسائل الخطأ
-  String? usernameError;
-  String? phoneError;
-  String? passError;
-  String? confirmError;
-  String? otpError;
-
-  // 🧹 مراقبة الحقول لتصفية الأخطاء
-  AuthController() {
-    usernameCtrl.addListener(_clearUsernameError);
-    phoneCtrl.addListener(_clearPhoneError);
-    passCtrl.addListener(_clearPassError);
-    confirmCtrl.addListener(_clearConfirmError);
-    for (var c in otpControllers) {
-      c.addListener(_clearOtpError);
-    }
-  }
 
   @override
   void dispose() {
@@ -45,202 +25,129 @@ class AuthController extends ChangeNotifier {
     phoneCtrl.dispose();
     passCtrl.dispose();
     confirmCtrl.dispose();
-    for (var c in otpControllers) {
-      c.dispose();
-    }
+    for (var c in otpControllers) c.dispose();
     super.dispose();
   }
 
-  // 🧼 مسح الأخطاء أثناء الكتابة
-  void _clearUsernameError() {
-    if (usernameError != null && usernameCtrl.text.isNotEmpty) {
-      usernameError = null;
-      notifyListeners();
-    }
-  }
+  int _generateCode() => 100000 + Random().nextInt(900000);
 
-  void _clearPhoneError() {
-    if (phoneError != null &&
-        phoneCtrl.text.startsWith("5") &&
-        phoneCtrl.text.length == 9) {
-      phoneError = null;
-      notifyListeners();
-    }
-  }
-
-  void _clearPassError() {
-    if (passError != null && passCtrl.text.isNotEmpty) {
-      passError = null;
-      notifyListeners();
-    }
-  }
-
-  void _clearConfirmError() {
-    if (confirmError != null &&
-        confirmCtrl.text.isNotEmpty &&
-        confirmCtrl.text == passCtrl.text) {
-      confirmError = null;
-      notifyListeners();
-    }
-  }
-
-  void _clearOtpError() {
-    if (otpError != null && otpControllers.any((c) => c.text.isNotEmpty)) {
-      otpError = null;
-      notifyListeners();
-    }
-  }
-
-  // 🌍 تبديل كود الدولة
-  void toggleCountryCode() {
-    countryCode = (countryCode == "+972") ? "+970" : "+972";
-    notifyListeners();
-  }
-
-  // 🔙 الرجوع للخطوة السابقة
-  void goBack() {
-    if (accountStep) {
-      accountStep = false;
-    } else if (otpStep) {
-      otpStep = false;
-    }
-    notifyListeners();
-  }
-
-  // ✅ تحقق من رقم الهاتف
-  bool validatePhone() {
-    final phone = phoneCtrl.text.trim();
-
-    if (!phone.startsWith('5')) {
-      phoneError = "يجب أن يبدأ رقم الجوال بالرقم 5";
-      notifyListeners();
-      return false;
-    }
-
-    if (!RegExp(r'^5\d{8}$').hasMatch(phone)) {
-      phoneError = "رقم الجوال يجب أن يتكون من 9 أرقام ويبدأ بـ 5";
-      notifyListeners();
-      return false;
-    }
-
-    phoneError = null;
-    notifyListeners();
-    return true;
-  }
-
-  // ✅ تحقق من بيانات الحساب
-  bool validateAccount() {
-    usernameError = null;
-    passError = null;
-    confirmError = null;
-
-    if (usernameCtrl.text.isEmpty) {
-      usernameError = "الاسم مطلوب";
-    }
-
-    if (passCtrl.text.isEmpty) {
-      passError = "كلمة المرور مطلوبة";
-    } else if (passCtrl.text.length < 6) {
-      passError = "كلمة المرور قصيرة جدًا";
-    }
-
-    if (confirmCtrl.text != passCtrl.text) {
-      confirmError = "كلمة المرور غير متطابقة";
-    }
-
-    notifyListeners();
-
-    return usernameError == null &&
-        phoneError == null &&
-        passError == null &&
-        confirmError == null;
-  }
-
-  // 📩 إرسال OTP عبر Firebase
-  Future<void> sendOTP(BuildContext context) async {
-    if (!validatePhone()) return;
-
-    // 🔧 معالجة المقدمة لتناسب Firebase (تحويل +970 إلى +972)
-    String firebaseCode = (countryCode == "+970") ? "+972" : countryCode;
-
-    // 🔢 الرقم الكامل بصيغة E.164 (بدون صفر أول)
-    final local = phoneCtrl.text.trim();
-    final fullPhone = "$firebaseCode$local";
-
-    debugPrint("📤 إرسال OTP إلى: $fullPhone");
-
-    if (kIsWeb) {
-      verificationId = "web-test";
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Web test OTP: 123456")));
-      otpStep = true;
-      notifyListeners();
+  // sendOTP now expects normalized full number (like +9705986...)
+  Future<void> sendOTP(BuildContext context, String fullNumber) async {
+    if (fullNumber.isEmpty) {
+      _showMessage(context, "أدخل رقم الجوال أولًا");
       return;
     }
 
-    await _auth.verifyPhoneNumber(
-      phoneNumber: fullPhone,
-      verificationCompleted: (credential) async {
-        await _auth.signInWithCredential(credential);
-      },
-      verificationFailed: (e) {
-        phoneError = "فشل التحقق: ${e.message}";
-        notifyListeners();
-      },
-      codeSent: (verId, _) {
-        verificationId = verId;
-        otpStep = true;
-        notifyListeners();
-      },
-      codeAutoRetrievalTimeout: (verId) {
-        verificationId = verId;
-      },
+    generatedCode = _generateCode();
+    otpStep = true;
+    accountStep = false;
+    notifyListeners();
+
+    print('🔢 OTP sent (debug): $generatedCode to $fullNumber');
+    _showMessage(context, "تم إرسال كود التحقق إلى رقمك");
+  }
+
+  Future<void> verifyOTP(BuildContext context) async {
+    final enteredCode = otpControllers.map((c) => c.text).join();
+
+    if (generatedCode == null) {
+      _showMessage(context, "الرجاء طلب الكود أولًا");
+      return;
+    }
+
+    if (enteredCode == generatedCode.toString()) {
+      _showMessage(context, "تم التحقق بنجاح");
+      otpStep = false;
+      accountStep = true;
+      generatedCode = null;
+      notifyListeners();
+    } else {
+      _showMessage(context, "الكود غير صحيح");
+    }
+  }
+
+ Future<void> registerUser(BuildContext context) async {
+  final username = usernameCtrl.text.trim();
+  final phone = phoneCtrl.text.trim();
+  final password = passCtrl.text.trim();
+  final confirm = confirmCtrl.text.trim();
+
+  if (username.isEmpty || phone.isEmpty || password.isEmpty) {
+    _showMessage(context, "املأ جميع الحقول");
+    return;
+  }
+  if (password != confirm) {
+    _showMessage(context, "كلمة المرور غير متطابقة");
+    return;
+  }
+
+  // 🔹 تأكدي من الشكل النهائي للرقم
+  final fullNumber = phone.startsWith('+') ? phone : '+970$phone';
+
+  try {
+    final response = await http.post(
+      Uri.parse("$serverUrl/register"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "username": username,
+        "phone_number": fullNumber, // صيغة +970xxxxxxx
+        "password_hash": password,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      _showMessage(context, "تم إنشاء الحساب بنجاح 🎉");
+    } else {
+      _showMessage(context, "خطأ من السيرفر: ${response.statusCode} ${response.body}");
+    }
+  } catch (e) {
+    _showMessage(context, "تعذر الاتصال بالسيرفر: $e");
+  }
+}
+
+
+  void _showMessage(BuildContext context, String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Center(child: Text(msg, textAlign: TextAlign.center)),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
+      ),
     );
   }
 
-  // 🔐 تحقق من كود OTP
-  Future<bool> verifyOTP(BuildContext context) async {
-    String otp = otpControllers.map((c) => c.text).join();
-    if (otp.isEmpty || otp.length < 6) {
-      otpError = "الرمز غير مكتمل";
-      notifyListeners();
-      return false;
-    }
+  
+Future<void> loginUser(BuildContext context) async {
+  final username = usernameCtrl.text.trim();
+  final password = passCtrl.text.trim();
 
-    if (kIsWeb && otp == "123456") {
-      accountStep = true;
-      otpStep = false;
-      notifyListeners();
-      return true;
-    }
-
-    try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: verificationId!,
-        smsCode: otp,
-      );
-
-      await _auth.signInWithCredential(credential);
-      accountStep = true;
-      otpStep = false;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      otpError = "رمز التحقق غير صحيح";
-      notifyListeners();
-      return false;
-    }
+  if (username.isEmpty || password.isEmpty) {
+    _showMessage(context, "املأ جميع الحقول");
+    return;
   }
 
-  // 🧠 تسجيل دخول تجريبي
-  bool login(String username, String password) {
-    if ((username == "takkeh" || username == "599000000") &&
-        password == "12345") {
-      debugPrint("✅ تسجيل دخول ناجح");
-      return true;
+  try {
+    final response = await http.post(
+      Uri.parse("$serverUrl/login"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "username": username,
+        "password_hash": password, // نفس الحقل في السيرفر
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      _showMessage(context, "تم تسجيل الدخول بنجاح ✅");
+      // هنا يمكنك حفظ بيانات الجلسة إذا أردت (token, user_id ...)
+    } else {
+      final resp = response.body;
+      _showMessage(context, "خطأ من السيرفر: ${response.statusCode} $resp");
     }
-    debugPrint("❌ فشل تسجيل الدخول");
-    return false;
+  } catch (e) {
+    _showMessage(context, "تعذر الاتصال بالسيرفر: $e");
   }
+}
+
 }
