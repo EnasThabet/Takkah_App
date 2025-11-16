@@ -137,11 +137,16 @@ class _LoginViewState extends State<LoginView> {
                                     _isLoading
                                         ? const CircularProgressIndicator()
                                         : ElevatedButton(
-                                          onPressed: _login,
+                                           onPressed:
+                                    () => Navigator.pushNamed(
+                                      context,
+                                      '/home',
+                                    ),  
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor:
                                                 Colors.green.shade700,
                                           ),
+                                          
                                           child: const Text("تسجيل الدخول"),
                                         ),
                               ),

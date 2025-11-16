@@ -22,7 +22,7 @@ class AuthController extends ChangeNotifier {
   ConfirmationResult? _confirmationResult; // خاص بالويب
 
   // ===================== Server URL =====================
-  final String serverUrl = "http://192.168.0.112:3000";
+  final String serverUrl = "http://192.168.0.103:3000";
   // final String serverUrl = "http://localhost:3000";
 
   // ===================== Dispose =====================
