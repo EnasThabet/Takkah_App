@@ -55,8 +55,6 @@ android {
             minifyEnabled false
             shrinkResources false
 
-            // Required to ensure compatibility with CI/CD builds
-            ndkDebugSymbolLevel 'FULL'
         }
     }
 }
