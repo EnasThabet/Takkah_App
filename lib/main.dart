@@ -1,7 +1,10 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
+import 'package:takkeh/controllers/auth_controller.dart' show AuthController;
 import 'package:takkeh/views/home_view.dart';
+import 'package:takkeh/views/nlp_view.dart';
 import './config/app_config.dart';
 import './config/app_theme.dart';
 import './services/firebase_service.dart';
@@ -39,21 +42,28 @@ class MyApp extends StatelessWidget {
 }
 
 class TakkehApp extends StatelessWidget {
+  
   const TakkehApp({super.key});
 
-  @override
+@override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Takkeh',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      home: const HomePage(),
-      routes: {
-        '/login': (_) => const LoginView(),
-        '/signupscreen': (context) => const SignUpView(),
-        '/check': (_) => const FirebaseCheckPage(),
-        '/home':(_) => const HomePage(),
-      },
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthController()),
+        // ضيف أي Providers ثانية هنا
+      ],
+      child: MaterialApp(
+        title: 'Takkeh',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        home: const ProcessedMessagesPage(),
+        routes: {
+          '/login': (_) => const LoginView(),
+          '/signupscreen': (_) => const SignUpView(),
+          '/check': (_) => const FirebaseCheckPage(),
+          '/home': (_) => const HomePage(),
+        },
+      ),
     );
   }
 }

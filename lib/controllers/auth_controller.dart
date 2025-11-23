@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthController extends ChangeNotifier {
   // ===================== Controllers =====================
@@ -11,6 +12,8 @@ class AuthController extends ChangeNotifier {
   final passCtrl = TextEditingController();
   final confirmCtrl = TextEditingController();
   final otpControllers = List.generate(6, (_) => TextEditingController());
+    final supabase = Supabase.instance.client;
+
 
   // ===================== States =====================
   bool otpStep = false;
@@ -22,7 +25,7 @@ class AuthController extends ChangeNotifier {
   ConfirmationResult? _confirmationResult; // خاص بالويب
 
   // ===================== Server URL =====================
-  final String serverUrl = "http://192.168.0.103:3000";
+  final String serverUrl = "http://192.168.0.111:3000";
   // final String serverUrl = "http://localhost:3000";
 
   // ===================== Dispose =====================
@@ -188,6 +191,98 @@ class AuthController extends ChangeNotifier {
       _showMessage(context, "تعذر الاتصال بالسيرفر: $e");
     }
   }
+   bool loading = false;
+
+  /// load the current logged-in user's profile from 'users' table
+  Future<void> loadUserProfile() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    loading = true;
+    notifyListeners();
+
+    try {
+      final res = await supabase
+          .from('users')
+          .select()
+          .eq('id', user.id)
+          .maybeSingle();
+
+      if (res != null) {
+        final Map<String, dynamic> row = res as Map<String, dynamic>;
+        usernameCtrl.text = row['username'] ?? '';
+        phoneCtrl.text = row['phone_number'] ?? '';
+        passCtrl.text = row['password_hash'] ?? '';
+      }
+    } catch (e) {
+      debugPrint('loadUserProfile error: $e');
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
+  }
+
+  /// update DB row for current user
+  Future<bool> updateUserProfile(BuildContext context) async {
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      _showMessage(context, "المستخدم غير مسجّل");
+      return false;
+    }
+
+    final updateData = {
+      'username': usernameCtrl.text.trim(),
+      'phone_number': phoneCtrl.text.trim(),
+      'password_hash': passCtrl.text.trim(),
+    };
+
+    try {
+      final res = await supabase
+          .from('users')
+          .update(updateData)
+          .eq('id', user.id);
+
+      // supabase Dart client returns PostgrestResponse-like object; check error
+      // If using older/newer SDK adjust as necessary:
+      // if (res.error != null) { ... }
+      _showMessage(context, "تم حفظ التعديلات بنجاح");
+      return true;
+    } catch (e) {
+      debugPrint('updateUserProfile error: $e');
+      _showMessage(context, "فشل حفظ التعديلات");
+      return false;
+    }
+  }
+
+  /// delete user record from 'users' then sign out (does not delete auth user)
+  Future<bool> deleteAccount(BuildContext context) async {
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      _showMessage(context, "لا يوجد مستخدم");
+      return false;
+    }
+
+    try {
+      await supabase.from('users').delete().eq('id', user.id);
+
+      // sign out
+      await supabase.auth.signOut();
+
+      _showMessage(context, "تم حذف الحساب نهائيًا");
+      return true;
+    } catch (e) {
+      debugPrint('deleteAccount error: $e');
+      _showMessage(context, "فشل حذف الحساب");
+      return false;
+    }
+  }
+
+  void disposeControllers() {
+    usernameCtrl.dispose();
+    phoneCtrl.dispose();
+    passCtrl.dispose();
+  }
+
 
   // ===================== Login User =====================
   Future<void> loginUser(BuildContext context) async {

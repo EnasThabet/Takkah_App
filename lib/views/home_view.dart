@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:takkeh/views/cities_page.dart';
+import 'package:takkeh/views/my_account_page.dart';
 import 'dart:math';
 import 'dart:ui' as ui;
 import '../controllers/province_controller.dart';
@@ -106,17 +107,27 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar: BottomNavigationBar(
-        selectedItemColor: const Color(0xFF2E7D32),
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "الرئيسية"),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: "التنبيهات"),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "المفضلة"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "الملف الشخصي"),
-        ],
-      ),
+    bottomNavigationBar: BottomNavigationBar(
+  selectedItemColor: const Color(0xFF2E7D32),
+  unselectedItemColor: Colors.grey,
+  type: BottomNavigationBarType.fixed,
+    currentIndex: 0,
+    onTap: (index) {
+      if (index == 3) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => MyAccountPage()),
+        );
+      }
+    },
+    items: const [
+      BottomNavigationBarItem(icon: Icon(Icons.home), label: "الرئيسية"),
+      BottomNavigationBarItem(icon: Icon(Icons.notifications), label: "التنبيهات"),
+      BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "المفضلة"),
+      BottomNavigationBarItem(icon: Icon(Icons.person), label: "الملف الشخصي"),
+    ],
+),
+
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
