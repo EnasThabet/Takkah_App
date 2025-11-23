@@ -103,6 +103,10 @@ flutter:
   # see https://flutter.dev/to/font-from-package
   assets:
     - assets/takkeh_logo.png
+<<<<<<< HEAD
     - assets/car.jpg
     - .env
+=======
+    #- .env
+>>>>>>> 701329149ec99d152b5ba903639fa2bc14e83bf8
     

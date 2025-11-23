@@ -1,13 +1,21 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
+
+    ext {
+        compileSdkVersion = 36
+        targetSdkVersion = 36
+        minSdkVersion = 23
+    }
+
     repositories {
         google()
         mavenCentral()
     }
+
     dependencies {
-        // Gradle build tools
-        classpath 'com.android.tools.build:gradle:8.0.2'
+        // Gradle Android tools (latest stable)
+        classpath 'com.android.tools.build:gradle:8.2.2'
 
         // Google services for Firebase
         classpath 'com.google.gms:google-services:4.3.15'
